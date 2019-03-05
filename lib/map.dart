@@ -1,5 +1,9 @@
+import 'dart:io';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
+import 'package:npower/data/route_plan.dart';
 
 
 
@@ -40,6 +44,31 @@ class MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
+    getRoute();
+  }
+
+  @override
+  void dispose() {
+    mapController.removeListener(_onMapChanged);
+    super.dispose();
+  }
+
+  void getRoute() async {
+    var url = "https://npower.azurewebsites.net/api/routeplan";
+    var httpClient = new HttpClient();
+    try {
+      var request = await httpClient.getUrl(Uri.parse(url));
+      var response = await request.close();
+
+      await for (var contents in response.transform(Utf8Decoder())) {
+        var routePlan = RoutePlan.fromJson(json.decode(contents));
+        print(routePlan);
+      }
+    } on FormatException catch(fe) {
+      print(fe);
+    } on Exception catch(e) {
+      print(e);
+    }
   }
 
   void _onMapChanged() {
@@ -51,12 +80,6 @@ class MapPageState extends State<MapPage> {
   void _extractMapInfo() {
     _position = mapController.cameraPosition;
     _isMoving = mapController.isCameraMoving;
-  }
-
-  @override
-  void dispose() {
-    mapController.removeListener(_onMapChanged);
-    super.dispose();
   }
 
   Widget _myLocationTrackingModeCycler() {

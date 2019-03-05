@@ -17,6 +17,12 @@ dependencies:
     sdk: flutter
   mapbox_gl:
     path: ./mapbox_gl
+  uuid: 2.0.0
+  url_launcher: 5.0.1
+  uni_links: 0.1.4
+
+#  simple_auth:
+#  simple_auth_flutter:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -25,6 +31,8 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+#  simple_auth_generator:
+#  build_runner:
 
 
 # For information on the generic Dart part of this file, see the
