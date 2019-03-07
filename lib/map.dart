@@ -8,14 +8,12 @@ import 'package:npower/data/visit.dart';
 import 'package:npower/view_models/route_plan_view_model.dart';
 import 'package:scrollable_bottom_sheet/scrollable_bottom_sheet.dart';
 
-
 final LatLngBounds sydneyBounds = LatLngBounds(
   southwest: const LatLng(-34.022631, 150.620685),
   northeast: const LatLng(-33.571835, 151.325952),
 );
 
-final GlobalKey<ScaffoldState> _scaffoldKey = new
-GlobalKey<ScaffoldState>();
+final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
 class MapPage extends StatefulWidget {
   const MapPage();
@@ -51,7 +49,8 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
   bool _tiltGesturesEnabled = true;
   bool _zoomGesturesEnabled = true;
   bool _myLocationEnabled = true;
-  MyLocationTrackingMode _myLocationTrackingMode = MyLocationTrackingMode.Tracking;
+  MyLocationTrackingMode _myLocationTrackingMode =
+      MyLocationTrackingMode.Tracking;
 
   @override
   void initState() {
@@ -59,7 +58,6 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     //routePlanList.addListener(() => _viewModel.routePlanItemItemSelected.add(routePlanList.selectedItem));
 
     super.initState();
-
   }
 
   @override
@@ -85,9 +83,11 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
         myLocationEnabled: _myLocationEnabled,
         myLocationTrackingMode: _myLocationTrackingMode,
         onMapClick: (point, latLng) async {
-          print("${point.x},${point.y}   ${latLng.latitude}/${latLng.longitude}");
-          List features = await mapController.queryRenderedFeatures(point, [],null);
-          if (features.length>0) {
+          print(
+              "${point.x},${point.y}   ${latLng.latitude}/${latLng.longitude}");
+          List features =
+              await mapController.queryRenderedFeatures(point, [], null);
+          if (features.length > 0) {
             print(features[0]);
           }
         },
@@ -95,8 +95,7 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
           this.setState(() {
             _myLocationTrackingMode = MyLocationTrackingMode.None;
           });
-        }
-    );
+        });
 
     return Scaffold(
         key: _scaffoldKey,
@@ -107,89 +106,23 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
           centerTitle: true,
         ),
         body: new Container(
-          child: Row(
-              children: <Widget>[
-                Expanded(
-                  child: mapboxMap,
-                )
-              ]
-          ),
-        )
-    );
-  }
-
-  Widget _bottomSheetBuilder(BuildContext context) {
-    final key = new GlobalKey<ScrollableBottomSheetState>();
-    final ThemeData themeData = Theme.of(context);
-
-    return Stack(children: [
-      ScrollableBottomSheet(
-        key: key,
-        halfHeight: 400.0,
-        minimumHeight: 150.0,
-        autoPop: false,
-        scrollTo: ScrollState.half,
-        snapAbove: false,
-        snapBelow: false,
-        callback: (state) {
-          if (state == ScrollState.minimum) {
-            _currentState = "minimum";
-            _currentDirection = "up";
-          } else if (state == ScrollState.half) {
-            if (_currentState == "minimum") {
-              _currentDirection = "up";
-            } else {
-              _currentDirection = "down";
-            }
-            _currentState = "half";
-          } else {
-            _currentState = "full";
-            _currentDirection = "down";
-          }
-        },
-        child: Container(
-            color: Colors.white,
-            margin: EdgeInsets.only(bottom: 10.0),
-            child: Padding(
-                padding: const EdgeInsets.all(32.0),
-                child: _getRoutePlanList()
+          child: Row(children: <Widget>[
+            Expanded(
+              child: mapboxMap,
             )
-        ),
-      ),
-      Positioned(
-          bottom: 0.0,
-          left: 0.0,
-          right: 0.0,
-          height: 50.0,
-          child: Material(
-            elevation: 15.0,
-            child: IconButton(
-                icon: Icon(Icons.list),
-                onPressed: () {
-                  if (_currentState == "half") {
-                    if (_currentDirection == "up") {
-                      key.currentState.animateToFull(context);
-                    } else {
-                      key.currentState.animateToMinimum(context);
-                    }
-                  } else {
-                    key.currentState.animateToHalf(context);
-                  }
-                }),
-          ))
-    ]);
+          ]),
+        ));
   }
 
   Widget _getRoutePlanList() {
-    return Container (
+    return Container(
       height: 1000,
       child: StreamBuilder<RoutePlan>(
           stream: _viewModel.routePlanStream,
           builder: (context, AsyncSnapshot<RoutePlan> snapshot) {
-            if (snapshot.hasError)
-              return Text("Error: ${snapshot.error}");
+            if (snapshot.hasError) return Text("Error: ${snapshot.error}");
 
-            switch(snapshot.connectionState) {
+            switch (snapshot.connectionState) {
               case ConnectionState.waiting:
                 return Text("Loading...");
               default:
@@ -203,35 +136,29 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                   itemBuilder: (context, i) {
                     return _buildRow(snapshot.data.visits[i]);
                   },
-
                 );
             }
-
           }),
     );
   }
 
   void _showBottomSheet() {
-    _scaffoldKey.currentState
-    .showBottomSheet(_bottomSheetBuilder)
-        .closed
-        .whenComplete(() {
-      if (mounted) {
-        setState(() {
-          _bottomSheetActive = false;
-        });
-      }
-    });
+    _scaffoldKey.currentState.showBottomSheet((context) {
+        return  _getRoutePlanList();
+    },
+        isScrollControlled: true,
+        clampTop: true);
+
   }
 
   Widget _buildRow(Visit visit) {
     return new GestureDetector(
       child: new ListTile(
-        title: new Text(visit.firstName + " " + visit.lastName, style: _biggerFont),
+        title: new Text(visit.firstName + " " + visit.lastName,
+            style: _biggerFont),
       ),
       onTap: _onVisitSelected(visit),
     );
-
   }
 
   _onVisitSelected(Visit visit) {
@@ -250,8 +177,9 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
   }
 
   Widget _myLocationTrackingModeCycler() {
-    final MyLocationTrackingMode nextType =
-    MyLocationTrackingMode.values[(_myLocationTrackingMode.index + 1) % MyLocationTrackingMode.values.length];
+    final MyLocationTrackingMode nextType = MyLocationTrackingMode.values[
+        (_myLocationTrackingMode.index + 1) %
+            MyLocationTrackingMode.values.length];
     return FlatButton(
       child: Text('change to $nextType'),
       onPressed: () {
@@ -370,8 +298,6 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
       },
     );
   }
-
-
 
   void onMapCreated(MapboxMapController controller) {
     mapController = controller;

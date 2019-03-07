@@ -1,5 +1,5 @@
 
-import 'dart:_http';
+import 'dart:io';
 import 'dart:async';
 
 import 'dart:convert';
@@ -23,7 +23,7 @@ class RoutePlanViewModelImpl extends RoutePlanViewModel {
 
   RoutePlanViewModelImpl() {
     _routePlanController.addStream(_getRoute().asStream());
-    _routePlanItemItemSelectedController.stream.listen(onVisitSelected)
+    _routePlanItemItemSelectedController.stream.listen(onVisitSelected);
   }
 
   @override
