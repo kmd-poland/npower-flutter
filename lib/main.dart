@@ -1,9 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-
 import 'package:npower/map.dart';
-
 import 'package:uuid/uuid.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart' show PlatformException;
@@ -13,7 +11,7 @@ final baseUthUrl = "dev-910575.oktapreview.com";
 final authorizationPath = "oauth2/default/v1/authorize";
 final scopes = "openid profile";
 final clientId = "0oajedfmef0ijCd6s0h7";
-final redirectUrl = "npower.kmd.pl://callback";
+final redirectUrl = "npower-flutter://callback/token";
 
 void main() => runApp(NPowerApp());
 
