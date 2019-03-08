@@ -23,7 +23,7 @@ class RoutePlanViewModelImpl extends RoutePlanViewModel {
 
   RoutePlanViewModelImpl() {
     _routePlanController.addStream(_getRoute().asStream());
-    _routePlanItemItemSelectedController.stream.listen(onVisitSelected)
+    _routePlanItemItemSelectedController.stream.listen(onVisitSelected);
   }
 
   @override

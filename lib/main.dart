@@ -106,7 +106,7 @@ class NPowerAppState extends State<NPowerApp> {
         home: home,
         theme: ThemeData(
           // Define the default Brightness and Colors
-          brightness: Brightness.dark,
+          brightness: Brightness.light,
           primaryColor: Colors.lightBlue[800],
           accentColor: Colors.cyan[600],
         ));

@@ -197,11 +197,13 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
                   return Text("Your route plan is empty.");
                 return new ListView.builder(
                   //physics: NeverScrollableScrollPhysics(),
-                  //primary: true,
+                  primary: true,
                   padding: const EdgeInsets.all(10.0),
                   itemCount: snapshot.data.visits.length,
                   itemBuilder: (context, i) {
-                    return _buildRow(snapshot.data.visits[i]);
+                    print("LIST ITEM FOR ${i}");
+                    var listItemView = _buildRow(snapshot.data.visits[i]);
+                    return listItemView;
                   },
 
                 );
@@ -225,16 +227,13 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
   }
 
   Widget _buildRow(Visit visit) {
-    return new GestureDetector(
-      child: new ListTile(
+      return new ListTile(
         title: new Text(visit.firstName + " " + visit.lastName, style: _biggerFont),
-      ),
-      onTap: _onVisitSelected(visit),
+        //onTap: _onVisitSelected(visit),
     );
-
   }
 
-  _onVisitSelected(Visit visit) {
+  void _onVisitSelected(Visit visit) {
     _viewModel.routePlanItemItemSelected.add(visit);
   }
 
