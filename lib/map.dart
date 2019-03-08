@@ -152,8 +152,7 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
         return  _getRoutePlanList();
     },
         initialHeightPercentage: 0.5,
-        isScrollControlled: true,
-        clampTop: false);
+        isScrollControlled: true);
   }
 
   Widget _buildRow(Visit visit) {
