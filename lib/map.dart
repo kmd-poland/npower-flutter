@@ -118,19 +118,23 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     return Container(
       height: 1000,
       child: StreamBuilder<RoutePlan>(
+
+
           stream: _viewModel.routePlanStream,
           builder: (context, AsyncSnapshot<RoutePlan> snapshot) {
             if (snapshot.hasError) return Text("Error: ${snapshot.error}");
 
             switch (snapshot.connectionState) {
               case ConnectionState.waiting:
-                return Text("Loading...");
+                return SingleChildScrollView(
+                    primary: true,
+                    child:  Text("Loading..."));
               default:
                 if (snapshot.data.visits.isEmpty)
                   return Text("Your route plan is empty.");
                 return new ListView.builder(
                   //physics: NeverScrollableScrollPhysics(),
-                  //primary: true,
+                  primary: true,
                   padding: const EdgeInsets.all(10.0),
                   itemCount: snapshot.data.visits.length,
                   itemBuilder: (context, i) {
@@ -143,17 +147,19 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
   }
 
   void _showBottomSheet() {
+  //  _bottomSheetController =
     _scaffoldKey.currentState.showBottomSheet((context) {
         return  _getRoutePlanList();
     },
+        initialHeightPercentage: 0.5,
         isScrollControlled: true,
-        clampTop: true);
-
+        clampTop: false);
   }
 
   Widget _buildRow(Visit visit) {
     return new GestureDetector(
       child: new ListTile(
+        leading: new CircleAvatar(backgroundImage: NetworkImage(visit.avatar),),
         title: new Text(visit.firstName + " " + visit.lastName,
             style: _biggerFont),
       ),
