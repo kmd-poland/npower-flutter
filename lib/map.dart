@@ -6,7 +6,7 @@ import 'package:mapbox_gl/mapbox_gl.dart';
 import 'package:npower/data/route_plan.dart';
 import 'package:npower/data/visit.dart';
 import 'package:npower/view_models/route_plan_view_model.dart';
-import 'package:scrollable_bottom_sheet/scrollable_bottom_sheet.dart';
+import 'package:npower/visit.dart';
 
 final LatLngBounds sydneyBounds = LatLngBounds(
   southwest: const LatLng(-34.022631, 150.620685),
@@ -30,9 +30,6 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     zoom: 11.0,
   );
 
-  bool _bottomSheetActive = false;
-  String _currentState = "half";
-  String _currentDirection = "up";
 
   final _biggerFont = const TextStyle(fontSize: 18.0);
   RoutePlanViewModel _viewModel = RoutePlanViewModelImpl();
@@ -54,15 +51,14 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
 
   @override
   void initState() {
-    // clicks from route plan would go there
-    //routePlanList.addListener(() => _viewModel.routePlanItemItemSelected.add(routePlanList.selectedItem));
-
     super.initState();
+    _viewModel.getRoute();
   }
 
   @override
   void dispose() {
     mapController.removeListener(_onMapChanged);
+    _viewModel.dispose();
     super.dispose();
   }
 
@@ -98,76 +94,83 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
         });
 
     return Scaffold(
-        key: _scaffoldKey,
-        appBar: AppBar(
-          // Here we take the value from the MyHomePage object that was created by
-          // the App.build method, and use it to set our appbar title.
-          title: Text("MAP!"),
-          centerTitle: true,
-        ),
-        body: new Container(
-          child: Row(children: <Widget>[
-            Expanded(
-              child: mapboxMap,
-            )
-          ]),
-        ),
+      key: _scaffoldKey,
+      appBar: AppBar(
+        // Here we take the value from the MyHomePage object that was created by
+        // the App.build method, and use it to set our appbar title.
+        title: Text("MAP!"),
+        centerTitle: true,
+      ),
+      body: new Container(
+        child: Row(children: <Widget>[
+          Expanded(
+            child: mapboxMap,
+          )
+        ]),
+      ),
       bottomSheetIsScrollControlled: true,
-      bottomSheet: Builder( builder: (ctx) =>   _getBottomSheet(ctx),),
-
-
+      bottomSheet: Builder(
+        builder: (ctx) => _getBottomSheet(ctx),
+      ),
     );
   }
 
-
-  Widget _getBottomSheet(BuildContext ctx){
+  Widget _getBottomSheet(BuildContext ctx) {
     return _getRoutePlanList();
   }
 
   Widget _getRoutePlanList() {
     return Container(
-      height: 100,
-      child: StreamBuilder<RoutePlan>(
+        height: 100,
 
+          child: StreamBuilder<RoutePlan>(
+              stream: _viewModel.routePlanObservable,
+              builder: (context, AsyncSnapshot<RoutePlan> snapshot) {
+                if (snapshot.hasError) return Text("Error: ${snapshot.error}");
 
-          stream: _viewModel.routePlanStream,
-          builder: (context, AsyncSnapshot<RoutePlan> snapshot) {
-            if (snapshot.hasError) return Text("Error: ${snapshot.error}");
-
-            switch (snapshot.connectionState) {
-              case ConnectionState.waiting:
-                return SingleChildScrollView(
-                   primary: true,
-                    child:  Text("Loading..."));
-              default:
-                if (snapshot.data.visits.isEmpty)
-                  return Text("Your route plan is empty.");
-                return new ListView.builder(
-                  //physics: NeverScrollableScrollPhysics(),
-                  primary: true,
-                  padding: const EdgeInsets.all(10.0),
-                  itemCount: snapshot.data.visits.length,
-                  itemBuilder: (context, i) {
-                    return _buildRow(snapshot.data.visits[i]);
-                  },
-                );
-            }
-          }),
-    );
+                switch (snapshot.connectionState) {
+                  case ConnectionState.waiting:
+                    return SingleChildScrollView(
+                        primary: true, child: Text("Loading..."));
+                  default:
+                    if (snapshot?.data?.visits == null ||
+                        snapshot.data.visits.isEmpty)
+                      return SingleChildScrollView(
+                          primary: true,
+                          child: Text("Your route [lan is empty"));
+                    return new ListView.builder(
+                      primary: true,
+                      padding: const EdgeInsets.all(10.0),
+                      itemCount: snapshot.data.visits.length,
+                      itemBuilder: (context, i) {
+                        return _buildRow(snapshot.data.visits[i]);
+                      },
+                    );
+                }
+              }),
+        );
   }
 
-
   Widget _buildRow(Visit visit) {
-    return  ListTile(
-      title: new Text(visit.firstName + " " + visit.lastName,
-          style: _biggerFont),
-      leading: new CircleAvatar(backgroundImage: NetworkImage(visit.avatar),),
+    return ListTile(
+      title:
+          new Text(visit.firstName + " " + visit.lastName, style: _biggerFont),
+      leading: Hero(
+        tag: visit.avatar,
+        child: CircleAvatar(
+          backgroundImage: NetworkImage(visit.avatar),
+        ),
+      ),
       onTap: () => _onVisitSelected(visit),
     );
   }
 
   _onVisitSelected(Visit visit) {
-    _viewModel.routePlanItemItemSelected.add(visit);
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => VisitPage(visit)),
+    );
+
   }
 
   void _onMapChanged() {
@@ -181,11 +184,9 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     _isMoving = mapController.isCameraMoving;
   }
 
-
   void onMapCreated(MapboxMapController controller) {
     mapController = controller;
     //mapController.addListener(_onMapChanged);
     _extractMapInfo();
-
   }
 }
