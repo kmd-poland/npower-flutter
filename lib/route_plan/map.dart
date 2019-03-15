@@ -3,9 +3,13 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
-import 'package:npower/data/route_plan.dart';
 import 'package:npower/data/visit.dart';
-import 'package:npower/view_models/route_plan_view_model.dart';
+import 'package:npower/route_plan/list_empty.dart';
+import 'package:npower/route_plan/list_error.dart';
+import 'package:npower/route_plan/list_loading.dart';
+import 'package:npower/route_plan/route_plan_results.dart';
+import 'package:npower/blocs/result_states.dart';
+import 'package:npower/blocs/route_plan_bloc.dart';
 import 'package:npower/visit.dart';
 
 final LatLngBounds sydneyBounds = LatLngBounds(
@@ -30,13 +34,9 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
     zoom: 11.0,
   );
 
-
-  final _biggerFont = const TextStyle(fontSize: 18.0);
-  RoutePlanViewModel _viewModel = RoutePlanViewModelImpl();
+  RoutePlanBloc _bloc;
 
   MapboxMapController mapController;
-  CameraPosition _position = _kInitialPosition;
-  bool _isMoving = false;
   bool _compassEnabled = true;
   CameraTargetBounds _cameraTargetBounds = CameraTargetBounds.unbounded;
   MinMaxZoomPreference _minMaxZoomPreference = MinMaxZoomPreference.unbounded;
@@ -49,18 +49,13 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
   MyLocationTrackingMode _myLocationTrackingMode =
       MyLocationTrackingMode.Tracking;
 
+  Widget _bottomSheet;
   @override
   void initState() {
     super.initState();
-    _viewModel.getRoute();
+    _bloc = RoutePlanBloc();
   }
 
-  @override
-  void dispose() {
-    mapController.removeListener(_onMapChanged);
-    _viewModel.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -93,6 +88,10 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
           });
         });
 
+    if (_bottomSheet == null ) {
+      _bottomSheet = _getRoutePlanList();
+    }
+
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
@@ -109,59 +108,40 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
         ]),
       ),
       bottomSheetIsScrollControlled: true,
-      bottomSheet: Builder(
-        builder: (ctx) => _getBottomSheet(ctx),
-      ),
+      bottomSheet: _bottomSheet,
     );
   }
 
-  Widget _getBottomSheet(BuildContext ctx) {
-    return _getRoutePlanList();
-  }
+
 
   Widget _getRoutePlanList() {
     return Container(
-        height: 100,
+      height: 100,
+      child: StreamBuilder<ResultState>(
+          stream: _bloc.routePlan,
+          initialData: ResultLoading(),
+          builder: (context, AsyncSnapshot<ResultState> snapshot) {
+            final state = snapshot.data;
 
-          child: StreamBuilder<RoutePlan>(
-              stream: _viewModel.routePlanObservable,
-              builder: (context, AsyncSnapshot<RoutePlan> snapshot) {
-                if (snapshot.hasError) return Text("Error: ${snapshot.error}");
+            if (state is ResultEmpty) {
+              return SingleChildScrollView(primary: true, child: EmptyWidget());
+            }
 
-                switch (snapshot.connectionState) {
-                  case ConnectionState.waiting:
-                    return SingleChildScrollView(
-                        primary: true, child: Text("Loading..."));
-                  default:
-                    if (snapshot?.data?.visits == null ||
-                        snapshot.data.visits.isEmpty)
-                      return SingleChildScrollView(
-                          primary: true,
-                          child: Text("Your route [lan is empty"));
-                    return new ListView.builder(
-                      primary: true,
-                      padding: const EdgeInsets.all(10.0),
-                      itemCount: snapshot.data.visits.length,
-                      itemBuilder: (context, i) {
-                        return _buildRow(snapshot.data.visits[i]);
-                      },
-                    );
-                }
-              }),
-        );
-  }
+            if (state is ResultError) {
+              return SingleChildScrollView(
+                  primary: true, child: ListErrorWidget());
+            }
 
-  Widget _buildRow(Visit visit) {
-    return ListTile(
-      title:
-          new Text(visit.firstName + " " + visit.lastName, style: _biggerFont),
-      leading: Hero(
-        tag: visit.avatar,
-        child: CircleAvatar(
-          backgroundImage: NetworkImage(visit.avatar),
-        ),
-      ),
-      onTap: () => _onVisitSelected(visit),
+            if (state is ResultReady<Visit>) {
+              return RoutePlanResultWidget(
+                items: state.items,
+                onTap: _onVisitSelected,
+              );
+            }
+
+            return SingleChildScrollView(
+                primary: true, child: LoadingWidget());
+          }),
     );
   }
 
@@ -170,23 +150,9 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
       context,
       MaterialPageRoute(builder: (context) => VisitPage(visit)),
     );
-
-  }
-
-  void _onMapChanged() {
-    setState(() {
-      _extractMapInfo();
-    });
-  }
-
-  void _extractMapInfo() {
-    _position = mapController.cameraPosition;
-    _isMoving = mapController.isCameraMoving;
   }
 
   void onMapCreated(MapboxMapController controller) {
     mapController = controller;
-    //mapController.addListener(_onMapChanged);
-    _extractMapInfo();
   }
 }
