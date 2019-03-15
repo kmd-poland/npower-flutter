@@ -18,16 +18,16 @@ dependencies:
   mapbox_gl:
     git:
       url: https://github.com/tobrun/flutter-mapbox-gl
-      #ref: 9cabcc57e63fbc9be4fafee08e6435a1a8c71d61
-      #path: packages/tobrun_mapbox_gl
-    #path: ./mapbox_gl
+      ref: ec854beb5ede016e328ec0293aa2eb296b8cd564 # drawing lines PR
   uuid: 2.0.0
   url_launcher: 5.0.1
   uni_links: 0.1.4
-  rxdart: ^0.21.0
   http: ^0.12.0+1
-
-
+  scrollable_bottom_sheet: ^0.0.9
+  permission_handler: ^3.0.0
+  geolocator: ^3.0.1
+  rxdart: 0.21.0
+  tuple: 1.0.2
 
   #  simple_auth:
 #  simple_auth_flutter:

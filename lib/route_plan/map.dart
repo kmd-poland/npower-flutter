@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
+import 'package:npower/data/route_plan.dart';
 import 'package:npower/data/visit.dart';
 import 'package:npower/route_plan/list_empty.dart';
 import 'package:npower/route_plan/list_error.dart';
@@ -11,6 +12,8 @@ import 'package:npower/route_plan/route_plan_results.dart';
 import 'package:npower/blocs/result_states.dart';
 import 'package:npower/blocs/route_plan_bloc.dart';
 import 'package:npower/visit.dart';
+import 'package:npower/data/route.dart';
+
 
 final LatLngBounds sydneyBounds = LatLngBounds(
   southwest: const LatLng(-34.022631, 150.620685),
@@ -54,8 +57,43 @@ class MapPageState extends State<MapPage> with SingleTickerProviderStateMixin {
   void initState() {
     super.initState();
     _bloc = RoutePlanBloc();
+
+    _bloc.route.listen((result) => {
+      handleRouteResult(result)
+    });
   }
 
+  void handleRouteResult(ResultState result) {
+
+    if (result is ResultReady<Coordinate>) {
+      print("Got route ${result.items}");
+
+      var geometry = result
+          .items
+          .map((x) => new LatLng(x.latitude, x.longitude))
+          .toList();
+
+      var lineOptions = LineOptions(
+        geometry: geometry,
+//        lineJoin: "whatever",
+//        lineColor: #0000ff,
+//        lineWidth: 7.0,
+//        lineOpacity: 0.8,
+//        draggable: false,
+//        lineBlur: 0.9,
+//        lineGapWidth: 0.2,
+//        lineOffset: 0,
+//        linePattern: "whatever"
+      );
+
+      mapController.addLine(lineOptions);
+    }
+    else if (result is ResultLoading) {
+      print("Loading route");
+    } else {
+      print("Result empty or error");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
