@@ -48,11 +48,9 @@ class RoutePlanBloc {
       .asyncMap((twoLocations) => getRoute(twoLocations.item1, twoLocations.item2.items.first))
       .map((directions) => {
         getDirectionsResult(directions)
-    });
+    }).expand((x) => x);
 
-    // na pewno da się lepiej :)
-    await for (var directions in streams)
-      for(var direction in directions)
+    await for (var direction in streams)
         yield direction;
 
   }
